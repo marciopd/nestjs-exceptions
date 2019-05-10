@@ -17,15 +17,19 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         const request = ctx.getRequest<Request>();
 
         const responseStatus = exception.status ? exception.status : HttpStatus.INTERNAL_SERVER_ERROR;
-        const errorId = uuid();
+        let errorId = undefined;
+        let integrationErrorDetails = undefined;
 
-        const integrationErrorDetails = this.extractIntegrationErrorDetails(exception);
+        if (responseStatus === HttpStatus.INTERNAL_SERVER_ERROR) {
+            errorId = uuid();
+            integrationErrorDetails = this.extractIntegrationErrorDetails(exception);
 
-        GlobalExceptionFilter.LOGGER.error({
-            errorId,
-            route: request.url,
-            integrationErrorDetails,
-        }, exception.message);
+            GlobalExceptionFilter.LOGGER.error({
+                errorId,
+                route: request.url,
+                integrationErrorDetails,
+            }, exception.message);
+        }
 
         response
             .status(responseStatus)
