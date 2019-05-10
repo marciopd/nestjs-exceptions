@@ -25,7 +25,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
             integrationErrorDetails = this.extractIntegrationErrorDetails(exception);
 
             GlobalExceptionFilter.LOGGER.error({
-                errorId,
+                errorId: errorId,
                 route: request.url,
                 integrationErrorDetails,
             }, exception.message);
@@ -34,7 +34,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         response
             .status(responseStatus)
             .json({
-                errorId,
+                errorId: errorId,
                 message: this.getClientResponseMessage(responseStatus, exception),
                 integrationErrorDetails: responseStatus === HttpStatus.INTERNAL_SERVER_ERROR && this.sendClientInternalServerErrorCause ? integrationErrorDetails : undefined,
             });
