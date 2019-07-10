@@ -28,6 +28,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                 errorId: errorId,
                 route: request.url,
                 integrationErrorDetails,
+                stack: exception.stack && JSON.stringify(exception.stack),
             }, exception.message);
         }
 
