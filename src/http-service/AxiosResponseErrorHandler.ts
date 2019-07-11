@@ -2,16 +2,16 @@ import {BadRequestException, HttpStatus} from '@nestjs/common';
 
 export class AxiosResponseErrorHandler {
     public static rethrowBadRequestError(error: any): void {
-        if (this.isBadRequest(error)) {
+        if (this.isHttpError(error, HttpStatus.BAD_REQUEST)) {
             throw new BadRequestException(this.getResponseErrorMessage(error));
         }
     }
 
-    private static getResponseErrorMessage(error: any): string {
-        return error.response.data && error.response.data.message;
+    public static isHttpError(error: any, httpStatus: HttpStatus): boolean {
+        return error && error.response && error.response.status === httpStatus;
     }
 
-    private static isBadRequest(error: any): boolean {
-        return error && error.response && error.response.status === HttpStatus.BAD_REQUEST;
+    private static getResponseErrorMessage(error: any): string {
+        return error.response.data && error.response.data.message;
     }
 }
