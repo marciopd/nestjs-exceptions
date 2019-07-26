@@ -1,6 +1,6 @@
 {
   "name": "nestjs-exceptions",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Nest custom exceptions and exception filters.",
   "main": "dist/index",
   "typings": "dist/index",
@@ -33,9 +33,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@nestjs/common": "~6.1.0",
+    "@nestjs/common": "6.5.3",
     "@nestjs/core": "~6.0.0",
-    "json-logger-service": "1.0.6"
+    "json-logger-service": "1.0.9"
   },
   "devDependencies": {
     "@types/jest": "~23.3.13",
