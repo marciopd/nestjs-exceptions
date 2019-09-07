@@ -34,5 +34,26 @@ bootstrap();
 You can configure it during instantiation so that the original cause of 500 errors are returned back to the client. The default is `false` for security reasons.
 
 ```typescript
-new GlobalExceptionFilter(true)
+const sendInternalServerErrorCause = true;
+new GlobalExceptionFilter(sendInternalServerErrorCause);
+```
+
+### GlobalExceptionFilter logging setup
+By default, only 500 errors are logged in the server side. 
+This can avoid performance issues or Denial of Service attacks because the server is being to much verbose logging.
+
+Anyways, for development reasons or debugging it's possible to log all errors:
+
+```typescript
+const sendInternalServerErrorCause = false;
+const logAllErrors = true;
+new GlobalExceptionFilter(sendInternalServerErrorCause, logAllErrors);
+```
+
+Or log only specific errors (besides 500):
+```typescript
+const sendInternalServerErrorCause = false;
+const logAllErrors = false;
+const logErrorsWithStatusCode = [400, 401];
+new GlobalExceptionFilter(sendInternalServerErrorCause, logAllErrors, logErrorsWithStatusCode);
 ```

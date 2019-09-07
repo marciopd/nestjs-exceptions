@@ -1,6 +1,6 @@
 import {GlobalExceptionFilter} from '../../src/exception/GlobalExceptionFilter';
 import {ResponseMock} from './ResponseMock';
-import {ArgumentsHost, BadRequestException, HttpStatus, InternalServerErrorException} from '@nestjs/common';
+import {ArgumentsHost, BadRequestException, HttpStatus, InternalServerErrorException, UnauthorizedException} from '@nestjs/common';
 import {IntegrationError} from '../../src/exception/IntegrationError';
 
 describe('GlobalExceptionFilter tests', () => {
@@ -75,5 +75,75 @@ describe('GlobalExceptionFilter tests', () => {
                 expect(responseMock._json.integrationErrorDetails).toBe('{"causeError":{"message":"CONN RESET"}}');
             });
         });
+    });
+
+    describe('With logging parameters', () => {
+        let loggingContext: any;
+        let loggingMessage: any;
+
+        beforeEach(() => {
+            loggingContext = undefined;
+            loggingMessage = undefined;
+        });
+
+        const prepareCaptureErrorLog = () => {
+            (globalExceptionFilter as any).logger = {
+                error: (context: any, message: string): void => {
+                    loggingContext = context;
+                    loggingMessage = message;
+                },
+            } as any;
+        };
+
+        describe('When logging all errors', () => {
+            beforeEach(() => {
+                globalExceptionFilter = new GlobalExceptionFilter(true, true);
+                prepareCaptureErrorLog();
+                globalExceptionFilter.catch(new BadRequestException(), hostMock);
+            });
+
+            it('Should log error and return response', () => {
+                expect(responseMock).toBeDefined();
+                expect(loggingContext).toBeDefined();
+                expect(loggingContext.route).toBeDefined();
+                expect(loggingContext.stack).toBeDefined();
+                expect(loggingMessage).toEqual({'error': 'Bad Request', 'statusCode': 400});
+            });
+        });
+
+        describe('When not logging all errors', () => {
+            beforeEach(() => {
+                globalExceptionFilter = new GlobalExceptionFilter(true, false);
+                prepareCaptureErrorLog();
+                globalExceptionFilter.catch(new BadRequestException(), hostMock);
+            });
+
+            it('Should not log error and return response', () => {
+                expect(responseMock).toBeDefined();
+                expect(loggingContext).toBeUndefined();
+                expect(loggingMessage).toBeUndefined();
+            });
+        });
+
+        describe('When logging specific errors', () => {
+            beforeEach(() => {
+                globalExceptionFilter = new GlobalExceptionFilter(true, false, [401]);
+                prepareCaptureErrorLog();
+                globalExceptionFilter.catch(new UnauthorizedException('Invalid Token'), hostMock);
+            });
+
+            it('Should log error and return response', () => {
+                expect(responseMock).toBeDefined();
+                expect(loggingContext).toBeDefined();
+                expect(loggingContext.route).toBeDefined();
+                expect(loggingContext.stack).toBeDefined();
+                expect(loggingMessage).toEqual({
+                    'error': 'Unauthorized',
+                    'message': 'Invalid Token',
+                    'statusCode': 401,
+                });
+            });
+        });
+
     });
 });

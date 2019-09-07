@@ -6,48 +6,7 @@ import {IntegrationError} from './IntegrationError';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-    private static readonly LOGGER: JsonLogger = LoggerFactory.createLogger(GlobalExceptionFilter.name);
-
-    public constructor(private readonly sendClientInternalServerErrorCause: boolean = false) {
-    }
-
-    public catch(exception: any, host: ArgumentsHost): any {
-        const ctx = host.switchToHttp();
-        const response = ctx.getResponse<Response>();
-        const request = ctx.getRequest<Request>();
-
-        const responseStatus = exception.status ? exception.status : HttpStatus.INTERNAL_SERVER_ERROR;
-        let errorId = undefined;
-        let integrationErrorDetails = undefined;
-
-        if (responseStatus === HttpStatus.INTERNAL_SERVER_ERROR) {
-            errorId = uuid();
-            integrationErrorDetails = this.extractIntegrationErrorDetails(exception);
-
-            GlobalExceptionFilter.LOGGER.error({
-                errorId: errorId,
-                route: request.url,
-                integrationErrorDetails,
-                stack: exception.stack && JSON.stringify(exception.stack),
-            }, exception.message);
-        } else {
-            GlobalExceptionFilter.LOGGER.error({
-                errorId: errorId,
-                route: request.url,
-                stack: exception.stack && JSON.stringify(exception.stack),
-            }, exception.message);
-        }
-
-        response
-            .status(responseStatus)
-            .json({
-                errorId: errorId,
-                message: this.getClientResponseMessage(responseStatus, exception),
-                integrationErrorDetails: responseStatus === HttpStatus.INTERNAL_SERVER_ERROR && this.sendClientInternalServerErrorCause ? integrationErrorDetails : undefined,
-            });
-    }
-
-    private extractIntegrationErrorDetails(error: any): string {
+    private static extractIntegrationErrorDetails(error: any): string {
         if (!(error instanceof IntegrationError)) {
             return undefined;
         }
@@ -69,6 +28,47 @@ export class GlobalExceptionFilter implements ExceptionFilter {
             details: error.causeError.response && error.causeError.response.data,
         };
         return JSON.stringify({causeError: integrationErrorDetails});
+    }
+    private logger: JsonLogger = LoggerFactory.createLogger(GlobalExceptionFilter.name);
+
+    public constructor(private readonly sendClientInternalServerErrorCause: boolean = false,
+                       private readonly logAllErrors: boolean = false,
+                       private readonly logErrorsWithStatusCode: number[] = []) {
+    }
+
+    public catch(exception: any, host: ArgumentsHost): any {
+        const ctx = host.switchToHttp();
+        const response = ctx.getResponse<Response>();
+        const request = ctx.getRequest<Request>();
+
+        const responseStatus = exception.status ? exception.status : HttpStatus.INTERNAL_SERVER_ERROR;
+        let errorId = undefined;
+        let integrationErrorDetails = undefined;
+
+        if (responseStatus === HttpStatus.INTERNAL_SERVER_ERROR) {
+            errorId = uuid();
+            integrationErrorDetails = GlobalExceptionFilter.extractIntegrationErrorDetails(exception);
+
+            this.logger.error({
+                errorId: errorId,
+                route: request.url,
+                integrationErrorDetails,
+                stack: exception.stack && JSON.stringify(exception.stack, ['stack'], 4),
+            }, exception.message);
+        } else if (this.logAllErrors || this.logErrorsWithStatusCode.indexOf(responseStatus) !== -1) {
+            this.logger.error({
+                route: request.url,
+                stack: exception.stack && JSON.stringify(exception.stack),
+            }, exception.message);
+        }
+
+        response
+            .status(responseStatus)
+            .json({
+                errorId: errorId,
+                message: this.getClientResponseMessage(responseStatus, exception),
+                integrationErrorDetails: responseStatus === HttpStatus.INTERNAL_SERVER_ERROR && this.sendClientInternalServerErrorCause ? integrationErrorDetails : undefined,
+            });
     }
 
     private getClientResponseMessage(responseStatus: number, exception: any): string {
