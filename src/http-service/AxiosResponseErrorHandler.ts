@@ -12,6 +12,6 @@ export class AxiosResponseErrorHandler {
     }
 
     private static getResponseErrorMessage(error: any): string {
-        return error.response.data && error.response.data.message;
+        return error.response.data && error.response.data.message || error.response.data;
     }
 }
