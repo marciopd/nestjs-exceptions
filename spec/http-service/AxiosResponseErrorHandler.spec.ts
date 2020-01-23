@@ -50,4 +50,53 @@ describe('AxiosResponseErrorHandler tests', () => {
             });
         });
     });
+
+    describe('Rethrowing Not Found errors', () => {
+        const expectedMessage = 'Original error message';
+
+        describe('When the error is an Axios Not Found request', () => {
+            describe('And the error is in Nest.js format', () => {
+                it('Rethrows the error', () => {
+                    const expectedMessage = {
+                        'error': 'Not Found',
+                        'message': 'Original error message',
+                        'statusCode': 404,
+                    };
+                    const error = {response: {status: HttpStatus.NOT_FOUND, data: {message: expectedMessage}}};
+                    try {
+                        AxiosResponseErrorHandler.rethrowNotFoundError(error);
+                        fail();
+                    } catch (e) {
+                        expect(e.status).toBe(HttpStatus.NOT_FOUND);
+                        expect(e.message).toEqual(expectedMessage);
+                    }
+                });
+            });
+
+            describe('And the error is NOT in Nest.js format', () => {
+                it('Rethrows the error', () => {
+                    const error = {response: {status: HttpStatus.NOT_FOUND, data: 'Not found URL'}};
+                    try {
+                        AxiosResponseErrorHandler.rethrowNotFoundError(error);
+                        fail();
+                    } catch (e) {
+                        expect(e.status).toBe(HttpStatus.NOT_FOUND);
+                        const errorInNestJsFormat = {
+                            'error': 'Not Found',
+                            'message': 'Not found URL',
+                            'statusCode': 404,
+                        };
+                        expect(e.message).toEqual(errorInNestJsFormat);
+                    }
+                });
+            });
+        });
+
+        describe('When the error is NOT an Axios Bad request', () => {
+            it('Ignores the error', () => {
+                const error = {response: {status: HttpStatus.INTERNAL_SERVER_ERROR, data: {message: expectedMessage}}};
+                AxiosResponseErrorHandler.rethrowNotFoundError(error);
+            });
+        });
+    });
 });

@@ -1,9 +1,17 @@
-import {BadRequestException, HttpStatus} from '@nestjs/common';
+import {BadRequestException, HttpStatus, NotFoundException} from '@nestjs/common';
 
 export class AxiosResponseErrorHandler {
     public static rethrowBadRequestError(error: any): void {
-        if (this.isHttpError(error, HttpStatus.BAD_REQUEST)) {
-            throw new BadRequestException(this.getResponseErrorMessage(error));
+        AxiosResponseErrorHandler.rethrowError(error, HttpStatus.BAD_REQUEST, BadRequestException);
+    }
+
+    public static rethrowNotFoundError(error: any): void {
+        AxiosResponseErrorHandler.rethrowError(error, HttpStatus.NOT_FOUND, NotFoundException);
+    }
+
+    public static rethrowError(error: any, errorHttpStatusCode: number, errorType: any): void {
+        if (this.isHttpError(error, errorHttpStatusCode)) {
+            throw new errorType(this.getResponseErrorMessage(error));
         }
     }
 
