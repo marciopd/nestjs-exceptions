@@ -19,7 +19,7 @@ describe('AxiosResponseErrorHandler tests', () => {
                         fail();
                     } catch (e) {
                         expect(e.status).toBe(HttpStatus.BAD_REQUEST);
-                        expect(e.message).toEqual(expectedMessage);
+                        expect(e.response).toEqual(expectedMessage);
                     }
                 });
             });
@@ -37,7 +37,7 @@ describe('AxiosResponseErrorHandler tests', () => {
                             'message': 'Invalid field X',
                             'statusCode': 400,
                         };
-                        expect(e.message).toEqual(errorInNestJsFormat);
+                        expect(e.response).toEqual(errorInNestJsFormat);
                     }
                 });
             });
@@ -68,7 +68,7 @@ describe('AxiosResponseErrorHandler tests', () => {
                         fail();
                     } catch (e) {
                         expect(e.status).toBe(HttpStatus.NOT_FOUND);
-                        expect(e.message).toEqual(expectedMessage);
+                        expect(e.response).toEqual(expectedMessage);
                     }
                 });
             });
@@ -86,13 +86,13 @@ describe('AxiosResponseErrorHandler tests', () => {
                             'message': 'Not found URL',
                             'statusCode': 404,
                         };
-                        expect(e.message).toEqual(errorInNestJsFormat);
+                        expect(e.response).toEqual(errorInNestJsFormat);
                     }
                 });
             });
         });
 
-        describe('When the error is NOT an Axios Bad request', () => {
+        describe('When the error is NOT an Axios Not Found', () => {
             it('Ignores the error', () => {
                 const error = {response: {status: HttpStatus.INTERNAL_SERVER_ERROR, data: {message: expectedMessage}}};
                 AxiosResponseErrorHandler.rethrowNotFoundError(error);

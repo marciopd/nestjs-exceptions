@@ -29,6 +29,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         };
         return JSON.stringify({causeError: integrationErrorDetails});
     }
+
     private logger: JsonLogger = LoggerFactory.createLogger(GlobalExceptionFilter.name);
 
     public constructor(private readonly sendClientInternalServerErrorCause: boolean = false,
@@ -42,6 +43,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         const request = ctx.getRequest<Request>();
 
         const responseStatus = exception.status ? exception.status : HttpStatus.INTERNAL_SERVER_ERROR;
+        const messageObject = this.getBackwardsCompatibleLogMessageObject(exception, responseStatus);
         let errorId = undefined;
         let integrationErrorDetails = undefined;
 
@@ -54,12 +56,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
                 route: request.url,
                 integrationErrorDetails,
                 stack: exception.stack && JSON.stringify(exception.stack, ['stack'], 4),
-            }, exception.message);
+            }, messageObject);
         } else if (this.logAllErrors || this.logErrorsWithStatusCode.indexOf(responseStatus) !== -1) {
             this.logger.error({
                 route: request.url,
                 stack: exception.stack && JSON.stringify(exception.stack),
-            }, exception.message);
+            }, messageObject);
         }
 
         response
@@ -71,12 +73,24 @@ export class GlobalExceptionFilter implements ExceptionFilter {
             });
     }
 
-    private getClientResponseMessage(responseStatus: number, exception: any): string {
+    private getClientResponseMessage(responseStatus: number, exception: any): any {
         if (responseStatus !== HttpStatus.INTERNAL_SERVER_ERROR
             || (responseStatus === HttpStatus.INTERNAL_SERVER_ERROR && this.sendClientInternalServerErrorCause)) {
-            return exception.message;
+            return this.getBackwardsCompatibleMessageObject(exception, responseStatus);
         }
 
         return 'Internal server error.';
+    }
+
+    private getBackwardsCompatibleMessageObject(exception: any, responseStatus: number): any {
+        return {error: exception.message, statusCode: responseStatus};
+    }
+
+    private getBackwardsCompatibleLogMessageObject(exception: any, responseStatus: number): any {
+        const errorResponse = exception.response;
+        if (errorResponse && errorResponse.error) {
+            return {error: errorResponse.error, message: errorResponse.message, statusCode: responseStatus};
+        }
+        return {error: exception.message, statusCode: responseStatus};
     }
 }
