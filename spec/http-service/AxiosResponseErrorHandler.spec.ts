@@ -20,11 +20,12 @@ describe('AxiosResponseErrorHandler tests', () => {
                     } catch (e) {
                         expect(e.status).toBe(HttpStatus.BAD_REQUEST);
                         expect(e.response).toEqual(expectedMessage);
+                        expect(e.message).toEqual('Original error message');
                     }
                 });
             });
 
-            describe('And the error is NOT in Nest.js format', () => {
+            describe('And the error is string (NOT in Nest.js format)', () => {
                 it('Rethrows the error', () => {
                     const error = {response: {status: HttpStatus.BAD_REQUEST, data: 'Invalid field X'}};
                     try {
@@ -38,7 +39,33 @@ describe('AxiosResponseErrorHandler tests', () => {
                             'statusCode': 400,
                         };
                         expect(e.response).toEqual(errorInNestJsFormat);
+                        expect(e.message).toEqual('Invalid field X');
                     }
+                });
+
+                describe('And the error is Array (NOT in Nest.js format)', () => {
+                    const errorMessageArray = [
+                        {
+                            error: 'must not be blank',
+                            field: 'name',
+                        },
+                    ];
+                    it('Rethrows the error', () => {
+                        const error = {response: {status: HttpStatus.BAD_REQUEST, data: errorMessageArray}};
+                        try {
+                            AxiosResponseErrorHandler.rethrowBadRequestError(error);
+                            fail();
+                        } catch (e) {
+                            expect(e.status).toBe(HttpStatus.BAD_REQUEST);
+                            const errorInNestJsFormat = {
+                                'error': 'Bad Request',
+                                'message': errorMessageArray,
+                                'statusCode': 400,
+                            };
+                            expect(e.response).toEqual(errorInNestJsFormat);
+                            expect(e.message).toEqual('Bad Request Exception');
+                        }
+                    });
                 });
             });
         });

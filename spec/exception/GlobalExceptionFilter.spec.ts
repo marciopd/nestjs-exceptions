@@ -27,17 +27,58 @@ describe('GlobalExceptionFilter tests', () => {
         });
 
         describe('When the error is not Internal Server Error', () => {
-            beforeEach(() => {
-                globalExceptionFilter.catch(new BadRequestException(), hostMock);
-            });
+            describe('When error message is a simple String', () => {
+                beforeEach(() => {
+                    globalExceptionFilter.catch(new BadRequestException('Invalid email'), hostMock);
+                });
 
-            it('Response has status and message properties', () => {
-                expect(responseMock._status).toBe(HttpStatus.BAD_REQUEST);
-                expect(responseMock._json).toEqual({
-                    'message': {
-                        'error': 'Bad Request',
-                        'statusCode': HttpStatus.BAD_REQUEST,
+                it('Response has status and message properties', () => {
+                    expect(responseMock._status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(responseMock._json).toEqual({
+                        'message': {
+                            'error': 'Bad Request',
+                            'message': 'Invalid email',
+                            'statusCode': HttpStatus.BAD_REQUEST,
+                        },
+                    });
+                });
+            });
+            describe('When error message is an Object in Nest.js old error format', () => {
+                beforeEach(() => {
+                    globalExceptionFilter.catch(new BadRequestException({error: 'Bad Request', message: 'Invalid email X', statusCode: 400}), hostMock);
+                });
+
+                it('Response has status and message properties', () => {
+                    expect(responseMock._status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(responseMock._json).toEqual({
+                        'message': {
+                            'error': 'Bad Request',
+                            'message': 'Invalid email X',
+                            'statusCode': HttpStatus.BAD_REQUEST,
+                        },
+                    });
+                });
+            });
+            describe('When error message is an Array', () => {
+                const errorMessageArray = [
+                    {
+                        error: 'must not be blank',
+                        field: 'name',
                     },
+                ];
+                beforeEach(() => {
+                    globalExceptionFilter.catch(new BadRequestException(errorMessageArray), hostMock);
+                });
+
+                it('Response has status and message properties', () => {
+                    expect(responseMock._status).toBe(HttpStatus.BAD_REQUEST);
+                    expect(responseMock._json).toEqual({
+                        'message': {
+                            'error': 'Bad Request',
+                            'message': errorMessageArray,
+                            'statusCode': HttpStatus.BAD_REQUEST,
+                        },
+                    });
                 });
             });
         });

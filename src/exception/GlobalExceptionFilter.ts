@@ -43,7 +43,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         const request = ctx.getRequest<Request>();
 
         const responseStatus = exception.status ? exception.status : HttpStatus.INTERNAL_SERVER_ERROR;
-        const messageObject = this.getBackwardsCompatibleLogMessageObject(exception, responseStatus);
+        const messageObject = this.getBackwardsCompatibleMessageObject(exception, responseStatus);
         let errorId = undefined;
         let integrationErrorDetails = undefined;
 
@@ -83,10 +83,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     }
 
     private getBackwardsCompatibleMessageObject(exception: any, responseStatus: number): any {
-        return {error: exception.message, statusCode: responseStatus};
-    }
-
-    private getBackwardsCompatibleLogMessageObject(exception: any, responseStatus: number): any {
         const errorResponse = exception.response;
         if (errorResponse && errorResponse.error) {
             return {error: errorResponse.error, message: errorResponse.message, statusCode: responseStatus};
