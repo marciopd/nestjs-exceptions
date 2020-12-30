@@ -1,7 +1,7 @@
 import {ArgumentsHost, Catch, ExceptionFilter, HttpStatus} from '@nestjs/common';
 import {Request, Response} from 'express';
 import {JsonLogger, LoggerFactory} from 'json-logger-service';
-import * as uuid from 'uuid/v1';
+import {v1 as uuidv1} from 'uuid';
 import {IntegrationError} from './IntegrationError';
 
 @Catch()
@@ -48,7 +48,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         let integrationErrorDetails = undefined;
 
         if (responseStatus === HttpStatus.INTERNAL_SERVER_ERROR) {
-            errorId = uuid();
+            errorId = uuidv1();
             integrationErrorDetails = GlobalExceptionFilter.extractIntegrationErrorDetails(exception);
 
             this.logger.error({

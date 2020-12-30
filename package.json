@@ -1,6 +1,6 @@
 {
   "name": "nestjs-exceptions",
-  "version": "7.6.6",
+  "version": "7.6.7",
   "description": "Nest custom exceptions and exception filters.",
   "main": "dist/index",
   "typings": "dist/index",
