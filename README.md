@@ -10,6 +10,13 @@ $ npm i nestjs-exceptions
 
 ## Usage
 
+### Nest.js compatibility matrix
+
+| Nest.js version | nestjs-exceptions compatible version |
+|-----------------|:--------------------------------------:|
+| 8.x.x           |                 8.x.x                  |
+| 7.x.x           |                 7.x.x                  |
+
 ### Integration Error
 
 You might want to use `IntegrationError` to wrap integration errors with a custom message.
