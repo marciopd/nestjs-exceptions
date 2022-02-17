@@ -1,6 +1,7 @@
 # Nest.js exceptions
+[![](https://img.shields.io/npm/dm/nestjs-exceptions.svg)](https://www.npmjs.com/package/nestjs-exceptions)
 
-Provides [Nest](https://nestjs.com/) custom exceptions and exception filters.
+Provides [Nest.js](https://nestjs.com/) custom exceptions and exception filters.
 
 ## Installation
 
